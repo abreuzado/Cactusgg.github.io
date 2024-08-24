@@ -8,10 +8,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rye&display=swap');
+
         body, html {
             margin: 0;
             padding: 0;
-            font-family: 'Old Western', Arial, sans-serif;
+            font-family: 'Rye', cursive;
             background-color: #e6ccb3;
             color: #4a3728;
         }
@@ -35,12 +37,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
-            padding-top: 60px;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding-top: 80px;
         }
         #cactus {
-            font-size: 120px;
+            width: 200px;
+            height: 200px;
             cursor: pointer;
             user-select: none;
             transition: transform 0.1s;
@@ -48,14 +51,14 @@
         #cactus:active {
             transform: scale(0.95);
         }
-        #upgrades {
+        #upgrades, #shop {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 10px;
             margin-top: 20px;
         }
-        .upgrade-btn {
+        .btn {
             background-color: #8b4513;
             color: #e6ccb3;
             border: none;
@@ -64,9 +67,24 @@
             cursor: pointer;
             border-radius: 5px;
             transition: background-color 0.3s;
+            font-family: 'Rye', cursive;
         }
-        .upgrade-btn:hover {
+        .btn:hover {
             background-color: #a0522d;
+        }
+        #ranking {
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 300px;
+        }
+        #rankingList {
+            list-style-type: none;
+            padding: 0;
+        }
+        #rankingList li {
+            margin-bottom: 5px;
         }
         #intro {
             max-width: 800px;
@@ -75,6 +93,18 @@
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 10px;
             text-align: center;
+        }
+        .tab {
+            display: none;
+        }
+        .tab-active {
+            display: block;
+        }
+        #tabButtons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -92,25 +122,46 @@
     </div>
 
     <div id="game" style="display: none;">
-        <div id="cactus">🌵</div>
-        <div id="upgrades">
-            <button class="upgrade-btn" onclick="upgrade('autoClick')">Auto Click: <span id="autoClickCost">10</span> CC</button>
-            <button class="upgrade-btn" onclick="upgrade('clickValue')">+1 CC/Click: <span id="clickValueCost">10</span> CC</button>
-            <button class="upgrade-btn" onclick="upgrade('cactusLevel')">Nível do Cacto: <span id="cactusLevelCost">50</span> CC</button>
+        <svg id="cactus" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40,90 Q40,40 50,30 Q60,40 60,90 Z" fill="#2ecc71" />
+            <path d="M30,70 Q30,50 40,60" fill="none" stroke="#2ecc71" stroke-width="5" />
+            <path d="M70,60 Q80,50 80,70" fill="none" stroke="#2ecc71" stroke-width="5" />
+        </svg>
+
+        <div id="tabButtons">
+            <button class="btn" onclick="showTab('upgrades')">Upgrades</button>
+            <button class="btn" onclick="showTab('shop')">Loja</button>
+            <button class="btn" onclick="showTab('ranking')">Ranking</button>
+        </div>
+
+        <div id="upgrades" class="tab tab-active">
+            <button class="btn" onclick="upgrade('autoClick')">Auto Click: <span id="autoClickCost">10</span> CC</button>
+            <button class="btn" onclick="upgrade('clickValue')">+1 CC/Click: <span id="clickValueCost">10</span> CC</button>
+            <button class="btn" onclick="upgrade('cactusLevel')">Nível do Cacto: <span id="cactusLevelCost">50</span> CC</button>
+        </div>
+
+        <div id="shop" class="tab">
+            <button class="btn" onclick="buyItem('hat')">Chapéu de Cowboy (100 CC)</button>
+            <button class="btn" onclick="buyItem('boots')">Botas de Cowboy (200 CC)</button>
+            <button class="btn" onclick="buyItem('poncho')">Poncho (300 CC)</button>
+        </div>
+
+        <div id="ranking" class="tab">
+            <h2>Top Jogadores</h2>
+            <ol id="rankingList"></ol>
         </div>
     </div>
 
     <script>
-        // Configuração do Firebase (substitua com suas próprias credenciais)
         const firebaseConfig = {
-    apiKey: "AIzaSyB-_EFF0pixOT4K1VzcfbLaEwbUK6qs2F0",
-    authDomain: "cactusgg-410df.firebaseapp.com",
-    projectId: "cactusgg-410df",
-    storageBucket: "cactusgg-410df.appspot.com",
-    messagingSenderId: "1057788985135",
-    appId: "1:1057788985135:web:41e3fc6f40289834afebda",
-    measurementId: "G-56YPMP0038"
-  };
+            apiKey: "AIzaSyB-_EFF0pixOT4K1VzcfbLaEwbUK6qs2F0",
+            authDomain: "cactusgg-410df.firebaseapp.com",
+            projectId: "cactusgg-410df",
+            storageBucket: "cactusgg-410df.appspot.com",
+            messagingSenderId: "1057788985135",
+            appId: "1:1057788985135:web:41e3fc6f40289834afebda",
+            measurementId: "G-56YPMP0038"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -128,8 +179,165 @@
             clickValue: 0,
             cactusLevel: 0
         };
+        let items = {
+            hat: false,
+            boots: false,
+            poncho: false
+        };
         let userId = null;
 
         function updateDisplay() {
             document.getElementById('cactcoins').textContent = `${cactcoins} CactCoins`;
-            document.getElementById('autoClick
+            document.getElementById('autoClickCost').textContent = upgradeCosts.autoClick;
+            document.getElementById('clickValueCost').textContent = upgradeCosts.clickValue;
+            document.getElementById('cactusLevelCost').textContent = upgradeCosts.cactusLevel;
+        }
+
+        function clickCactus() {
+            const currentTime = new Date().getTime();
+            if (currentTime - lastClickTime >= 100) {
+                cactcoins += clickValue;
+                lastClickTime = currentTime;
+                updateDisplay();
+                saveProgress();
+            }
+        }
+
+        function upgrade(type) {
+            if (cactcoins >= upgradeCosts[type]) {
+                cactcoins -= upgradeCosts[type];
+                upgradeLevels[type]++;
+                
+                switch(type) {
+                    case 'autoClick':
+                        autoClickValue++;
+                        break;
+                    case 'clickValue':
+                        clickValue++;
+                        break;
+                    case 'cactusLevel':
+                        document.getElementById('cactus').style.width = `${200 + upgradeLevels.cactusLevel * 10}px`;
+                        document.getElementById('cactus').style.height = `${200 + upgradeLevels.cactusLevel * 10}px`;
+                        break;
+                }
+                
+                upgradeCosts[type] = Math.floor(upgradeCosts[type] * 1.5);
+                updateDisplay();
+                saveProgress();
+            }
+        }
+
+        function buyItem(item) {
+            const costs = {hat: 100, boots: 200, poncho: 300};
+            if (cactcoins >= costs[item] && !items[item]) {
+                cactcoins -= costs[item];
+                items[item] = true;
+                updateCactusAppearance();
+                updateDisplay();
+                saveProgress();
+            }
+        }
+
+        function updateCactusAppearance() {
+            const cactus = document.getElementById('cactus');
+            if (items.hat) {
+                // Add hat to SVG
+                const hat = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                hat.setAttribute("d", "M30,30 Q50,10 70,30 L70,35 Q50,15 30,35 Z");
+                hat.setAttribute("fill", "#8B4513");
+                cactus.appendChild(hat);
+            }
+            if (items.boots) {
+                // Add boots to SVG
+                const boots = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                boots.setAttribute("x", "35");
+                boots.setAttribute("y", "90");
+                boots.setAttribute("width", "30");
+                boots.setAttribute("height", "10");
+                boots.setAttribute("fill", "#8B4513");
+                cactus.appendChild(boots);
+            }
+            if (items.poncho) {
+                // Add poncho to SVG
+                const poncho = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                poncho.setAttribute("d", "M30,50 Q50,40 70,50 L65,80 Q50,70 35,80 Z");
+                poncho.setAttribute("fill", "#CD853F");
+                cactus.appendChild(poncho);
+            }
+        }
+
+        function saveProgress() {
+            if (userId) {
+                db.collection('users').doc(userId).set({
+                    cactcoins: cactcoins,
+                    clickValue: clickValue,
+                    autoClickValue: autoClickValue,
+                    upgradeLevels: upgradeLevels,
+                    upgradeCosts: upgradeCosts,
+                    items: items
+                });
+            }
+        }
+
+        function loadProgress() {
+            if (userId) {
+                db.collection('users').doc(userId).get().then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        cactcoins = data.cactcoins;
+                        clickValue = data.clickValue;
+                        autoClickValue = data.autoClickValue;
+                        upgradeLevels = data.upgradeLevels;
+                        upgradeCosts = data.upgradeCosts;
+                        items = data.items || {};
+                        updateDisplay();
+                        updateCactusAppearance();
+                    }
+                });
+            }
+        }
+
+        function updateRanking() {
+            db.collection('users').orderBy('cactcoins', 'desc').limit(10).get().then((querySnapshot) => {
+                const rankingList = document.getElementById('rankingList');
+                rankingList.innerHTML = '';
+                querySnapshot.forEach((doc) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${doc.id}: ${doc.data().cactcoins} CactCoins`;
+                    rankingList.appendChild(li);
+                });
+            });
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('tab-active'));
+            document.getElementById(tabName).classList.add('tab-active');
+        }
+
+        setInterval(() => {
+            cactcoins += autoClickValue;
+            updateDisplay();
+            saveProgress();
+        }, 1000);
+
+        setInterval(updateRanking, 60000); // Update ranking every minute
+
+        document.getElementById('cactus').addEventListener('click', clickCactus);
+
+        // Verificar se está sendo executado no Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            if (tgUser) {
+                userId = tgUser.id.toString();
+                document.getElementById('intro').style.display = 'none';
+                document.getElementById('game').style.display = 'flex';
+                loadProgress();
+                updateRanking();
+            }
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
