@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CactusGG - O Jogo do Cacto do Faroeste</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Old Western', Arial, sans-serif;
+            background-color: #e6ccb3;
+            color: #4a3728;
+        }
+        #topBar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: rgba(74, 55, 40, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            color: #e6ccb3;
+            font-size: 24px;
+            z-index: 1000;
+        }
+        #game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding-top: 60px;
+        }
+        #cactus {
+            font-size: 120px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        #cactus:active {
+            transform: scale(0.95);
+        }
+        #upgrades {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .upgrade-btn {
+            background-color: #8b4513;
+            color: #e6ccb3;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .upgrade-btn:hover {
+            background-color: #a0522d;
+        }
+        #intro {
+            max-width: 800px;
+            margin: 80px auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="topBar">
+        <span>CactusGG</span>
+        <span id="cactcoins">0 CactCoins</span>
+    </div>
+
+    <div id="intro">
+        <h1>Bem-vindo ao CactusGG!</h1>
+        <p>CactusGG é um jogo de clicker ambientado no Velho Oeste. Clique no cacto para ganhar CactCoins e faça upgrades para aumentar sua produção!</p>
+        <p>Para jogar, abra o CactusGG no aplicativo Telegram e faça login com sua conta.</p>
+        <p>Boa sorte, parceiro!</p>
+    </div>
+
+    <div id="game" style="display: none;">
+        <div id="cactus">🌵</div>
+        <div id="upgrades">
+            <button class="upgrade-btn" onclick="upgrade('autoClick')">Auto Click: <span id="autoClickCost">10</span> CC</button>
+            <button class="upgrade-btn" onclick="upgrade('clickValue')">+1 CC/Click: <span id="clickValueCost">10</span> CC</button>
+            <button class="upgrade-btn" onclick="upgrade('cactusLevel')">Nível do Cacto: <span id="cactusLevelCost">50</span> CC</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Firebase (substitua com suas próprias credenciais)
+        const firebaseConfig = {
+    apiKey: "AIzaSyB-_EFF0pixOT4K1VzcfbLaEwbUK6qs2F0",
+    authDomain: "cactusgg-410df.firebaseapp.com",
+    projectId: "cactusgg-410df",
+    storageBucket: "cactusgg-410df.appspot.com",
+    messagingSenderId: "1057788985135",
+    appId: "1:1057788985135:web:41e3fc6f40289834afebda",
+    measurementId: "G-56YPMP0038"
+  };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let cactcoins = 0;
+        let clickValue = 1;
+        let autoClickValue = 0;
+        let lastClickTime = 0;
+        let upgradeCosts = {
+            autoClick: 10,
+            clickValue: 10,
+            cactusLevel: 50
+        };
+        let upgradeLevels = {
+            autoClick: 0,
+            clickValue: 0,
+            cactusLevel: 0
+        };
+        let userId = null;
+
+        function updateDisplay() {
+            document.getElementById('cactcoins').textContent = `${cactcoins} CactCoins`;
+            document.getElementById('autoClick
