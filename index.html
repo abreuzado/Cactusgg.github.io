@@ -114,10 +114,11 @@
         <span id="cactcoins">0 CactCoins</span>
     </div>
 
-    <div id="intro">
+        <div id="intro">
         <h1>Bem-vindo ao CactusGG!</h1>
         <p>CactusGG é um jogo de clicker ambientado no Velho Oeste. Clique no cacto para ganhar CactCoins e faça upgrades para aumentar sua produção!</p>
-        <p>Para jogar, abra o CactusGG no aplicativo Telegram e faça login com sua conta.</p>
+        <p>Para jogar, faça login com sua conta do Telegram:</p>
+        <button class="btn" onclick="loginWithTelegram()">Login com Telegram</button>
         <p>Boa sorte, parceiro!</p>
     </div>
 
@@ -278,6 +279,24 @@
                 });
             }
         }
+                function loginWithTelegram() {
+            // Verifica se o Telegram Web App está disponível
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                if (tgUser) {
+                    userId = tgUser.id.toString();
+                    document.getElementById('intro').style.display = 'none';
+                    document.getElementById('game').style.display = 'flex';
+                    loadProgress();
+                    updateRanking();
+                } else {
+                    alert("Não foi possível obter as informações do usuário. Tente novamente.");
+                }
+            } else {
+                alert("Este aplicativo só pode ser acessado pelo Telegram.");
+            }
+        }
 
         function loadProgress() {
             if (userId) {
@@ -324,18 +343,23 @@
 
         document.getElementById('cactus').addEventListener('click', clickCactus);
 
-        // Verificar se está sendo executado no Telegram Web App
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready();
-            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-            if (tgUser) {
-                userId = tgUser.id.toString();
-                document.getElementById('intro').style.display = 'none';
-                document.getElementById('game').style.display = 'flex';
-                loadProgress();
-                updateRanking();
+                document.addEventListener("DOMContentLoaded", function() {
+            // Verificar se está sendo executado no Telegram Web App
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                if (tgUser) {
+                    userId = tgUser.id.toString();
+                    document.getElementById('intro').style.display = 'none';
+                    document.getElementById('game').style.display = 'flex';
+                    loadProgress();
+                    updateRanking();
+                } else {
+                    document.getElementById('intro').style.display = 'block';
+                }
+            } else {
+                document.getElementById('intro').style.display = 'block';
             }
-        }
+        });
 
         updateDisplay();
     </script>
