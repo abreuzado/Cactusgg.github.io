@@ -1,155 +1,172 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CactusGG - O Jogo do Cacto do Faroeste</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>TeleClicker</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rye&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 
-        body, html {
+        * {
             margin: 0;
             padding: 0;
-            font-family: 'Rye', cursive;
-            background-color: #e6ccb3;
-            color: #4a3728;
+            box-sizing: border-box;
         }
-        #topBar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background-color: rgba(74, 55, 40, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            color: #e6ccb3;
-            font-size: 24px;
-            z-index: 1000;
-        }
-        #game {
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            padding-top: 80px;
-        }
-        #cactus {
-            width: 200px;
-            height: 200px;
-            cursor: pointer;
-            user-select: none;
-            transition: transform 0.1s;
-        }
-        #cactus:active {
-            transform: scale(0.95);
-        }
-        #upgrades, #shop {
-            display: flex;
-            flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
         }
-        .btn {
-            background-color: #8b4513;
-            color: #e6ccb3;
+
+        #intro, #game {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+
+        #intro {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            margin: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #0088cc;
+        }
+
+        p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        button {
+            background-color: #0088cc;
+            color: white;
             border: none;
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 1em;
             cursor: pointer;
             border-radius: 5px;
             transition: background-color 0.3s;
-            font-family: 'Rye', cursive;
         }
-        .btn:hover {
-            background-color: #a0522d;
+
+        button:hover {
+            background-color: #006699;
         }
-        #ranking {
-            margin-top: 20px;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 20px;
+
+        #clicker {
+            width: 150px;
+            height: 150px;
+            background-color: #0088cc;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.1s;
+            margin: 20px auto;
+        }
+
+        #clicker:active {
+            transform: scale(0.95);
+        }
+
+        #clicker svg {
+            width: 80px;
+            height: 80px;
+            fill: white;
+        }
+
+        #telecoins {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        .tab-container {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border-radius: 10px;
-            max-width: 300px;
+            padding: 20px;
+            margin-top: 20px;
         }
-        #rankingList {
+
+        .tab-buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .upgrade-btn, .shop-btn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #ranking-list {
             list-style-type: none;
             padding: 0;
         }
-        #rankingList li {
+
+        #ranking-list li {
             margin-bottom: 5px;
-        }
-        #intro {
-            max-width: 800px;
-            margin: 80px auto;
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 10px;
-            text-align: center;
-        }
-        .tab {
-            display: none;
-        }
-        .tab-active {
-            display: block;
-        }
-        #tabButtons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="topBar">
-        <span>CactusGG</span>
-        <span id="cactcoins">0 CactCoins</span>
-    </div>
-
-        <div id="intro">
-        <h1>Bem-vindo ao CactusGG!</h1>
-        <p>CactusGG é um jogo de clicker ambientado no Velho Oeste. Clique no cacto para ganhar CactCoins e faça upgrades para aumentar sua produção!</p>
-        <p>Para jogar, faça login com sua conta do Telegram:</p>
-        <button class="btn" onclick="loginWithTelegram()">Login com Telegram</button>
-        <p>Boa sorte, parceiro!</p>
+    <div id="intro">
+        <h1>Welcome to TeleClicker!</h1>
+        <p>TeleClicker is an exciting clicker game where you can earn TeleCoins (TC) by clicking and upgrading your abilities. Compete with other players and climb the ranks!</p>
+        <p>To start playing, please log in with your Telegram account:</p>
+        <button id="login-btn">Login with Telegram</button>
     </div>
 
     <div id="game" style="display: none;">
-        <svg id="cactus" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <path d="M40,90 Q40,40 50,30 Q60,40 60,90 Z" fill="#2ecc71" />
-            <path d="M30,70 Q30,50 40,60" fill="none" stroke="#2ecc71" stroke-width="5" />
-            <path d="M70,60 Q80,50 80,70" fill="none" stroke="#2ecc71" stroke-width="5" />
-        </svg>
-
-        <div id="tabButtons">
-            <button class="btn" onclick="showTab('upgrades')">Upgrades</button>
-            <button class="btn" onclick="showTab('shop')">Loja</button>
-            <button class="btn" onclick="showTab('ranking')">Ranking</button>
+        <h1>TeleClicker</h1>
+        <div id="telecoins">0 TC</div>
+        <div id="clicker">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
         </div>
-
-        <div id="upgrades" class="tab tab-active">
-            <button class="btn" onclick="upgrade('autoClick')">Auto Click: <span id="autoClickCost">10</span> CC</button>
-            <button class="btn" onclick="upgrade('clickValue')">+1 CC/Click: <span id="clickValueCost">10</span> CC</button>
-            <button class="btn" onclick="upgrade('cactusLevel')">Nível do Cacto: <span id="cactusLevelCost">50</span> CC</button>
-        </div>
-
-        <div id="shop" class="tab">
-            <button class="btn" onclick="buyItem('hat')">Chapéu de Cowboy (100 CC)</button>
-            <button class="btn" onclick="buyItem('boots')">Botas de Cowboy (200 CC)</button>
-            <button class="btn" onclick="buyItem('poncho')">Poncho (300 CC)</button>
-        </div>
-
-        <div id="ranking" class="tab">
-            <h2>Top Jogadores</h2>
-            <ol id="rankingList"></ol>
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button onclick="openTab('upgrades')">Upgrades</button>
+                <button onclick="openTab('shop')">Shop</button>
+                <button onclick="openTab('ranking')">Top Players</button>
+            </div>
+            <div id="upgrades" class="tab-content active">
+                <button class="upgrade-btn" onclick="upgrade('autoClick')">Auto Click: <span id="autoClickCost">10</span> TC</button>
+                <button class="upgrade-btn" onclick="upgrade('clickValue')">+1 TC/Click: <span id="clickValueCost">10</span> TC</button>
+                <button class="upgrade-btn" onclick="upgrade('telegramLevel')">Telegram Level: <span id="telegramLevelCost">50</span> TC</button>
+            </div>
+            <div id="shop" class="tab-content">
+                <button class="shop-btn" onclick="buyItem('premium')">Premium Account (1000 TC)</button>
+                <button class="shop-btn" onclick="buyItem('boost')">2x Boost (2000 TC)</button>
+                <button class="shop-btn" onclick="buyItem('theme')">Dark Theme (3000 TC)</button>
+            </div>
+            <div id="ranking" class="tab-content">
+                <ol id="ranking-list"></ol>
+            </div>
         </div>
     </div>
 
@@ -166,47 +183,42 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let cactcoins = 0;
+        let telecoins = 0;
         let clickValue = 1;
         let autoClickValue = 0;
-        let lastClickTime = 0;
         let upgradeCosts = {
             autoClick: 10,
             clickValue: 10,
-            cactusLevel: 50
+            telegramLevel: 50
         };
         let upgradeLevels = {
             autoClick: 0,
             clickValue: 0,
-            cactusLevel: 0
+            telegramLevel: 0
         };
         let items = {
-            hat: false,
-            boots: false,
-            poncho: false
+            premium: false,
+            boost: false,
+            theme: false
         };
         let userId = null;
 
         function updateDisplay() {
-            document.getElementById('cactcoins').textContent = `${cactcoins} CactCoins`;
+            document.getElementById('telecoins').textContent = `${telecoins} TC`;
             document.getElementById('autoClickCost').textContent = upgradeCosts.autoClick;
             document.getElementById('clickValueCost').textContent = upgradeCosts.clickValue;
-            document.getElementById('cactusLevelCost').textContent = upgradeCosts.cactusLevel;
+            document.getElementById('telegramLevelCost').textContent = upgradeCosts.telegramLevel;
         }
 
-        function clickCactus() {
-            const currentTime = new Date().getTime();
-            if (currentTime - lastClickTime >= 100) {
-                cactcoins += clickValue;
-                lastClickTime = currentTime;
-                updateDisplay();
-                saveProgress();
-            }
+        function clickTelegram() {
+            telecoins += clickValue;
+            updateDisplay();
+            saveProgress();
         }
 
         function upgrade(type) {
-            if (cactcoins >= upgradeCosts[type]) {
-                cactcoins -= upgradeCosts[type];
+            if (telecoins >= upgradeCosts[type]) {
+                telecoins -= upgradeCosts[type];
                 upgradeLevels[type]++;
                 
                 switch(type) {
@@ -216,9 +228,8 @@
                     case 'clickValue':
                         clickValue++;
                         break;
-                    case 'cactusLevel':
-                        document.getElementById('cactus').style.width = `${200 + upgradeLevels.cactusLevel * 10}px`;
-                        document.getElementById('cactus').style.height = `${200 + upgradeLevels.cactusLevel * 10}px`;
+                    case 'telegramLevel':
+                        // Visual upgrade logic here if needed
                         break;
                 }
                 
@@ -229,48 +240,19 @@
         }
 
         function buyItem(item) {
-            const costs = {hat: 100, boots: 200, poncho: 300};
-            if (cactcoins >= costs[item] && !items[item]) {
-                cactcoins -= costs[item];
+            const costs = {premium: 1000, boost: 2000, theme: 3000};
+            if (telecoins >= costs[item] && !items[item]) {
+                telecoins -= costs[item];
                 items[item] = true;
-                updateCactusAppearance();
                 updateDisplay();
                 saveProgress();
-            }
-        }
-
-        function updateCactusAppearance() {
-            const cactus = document.getElementById('cactus');
-            if (items.hat) {
-                // Add hat to SVG
-                const hat = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                hat.setAttribute("d", "M30,30 Q50,10 70,30 L70,35 Q50,15 30,35 Z");
-                hat.setAttribute("fill", "#8B4513");
-                cactus.appendChild(hat);
-            }
-            if (items.boots) {
-                // Add boots to SVG
-                const boots = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                boots.setAttribute("x", "35");
-                boots.setAttribute("y", "90");
-                boots.setAttribute("width", "30");
-                boots.setAttribute("height", "10");
-                boots.setAttribute("fill", "#8B4513");
-                cactus.appendChild(boots);
-            }
-            if (items.poncho) {
-                // Add poncho to SVG
-                const poncho = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                poncho.setAttribute("d", "M30,50 Q50,40 70,50 L65,80 Q50,70 35,80 Z");
-                poncho.setAttribute("fill", "#CD853F");
-                cactus.appendChild(poncho);
             }
         }
 
         function saveProgress() {
             if (userId) {
                 db.collection('users').doc(userId).set({
-                    cactcoins: cactcoins,
+                    telecoins: telecoins,
                     clickValue: clickValue,
                     autoClickValue: autoClickValue,
                     upgradeLevels: upgradeLevels,
@@ -279,89 +261,78 @@
                 });
             }
         }
-                function loginWithTelegram() {
-            // Verifica se o Telegram Web App está disponível
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.ready();
-                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                if (tgUser) {
-                    userId = tgUser.id.toString();
-                    document.getElementById('intro').style.display = 'none';
-                    document.getElementById('game').style.display = 'flex';
-                    loadProgress();
-                    updateRanking();
-                } else {
-                    alert("Não foi possível obter as informações do usuário. Tente novamente.");
-                }
-            } else {
-                alert("Este aplicativo só pode ser acessado pelo Telegram.");
-            }
-        }
 
         function loadProgress() {
             if (userId) {
                 db.collection('users').doc(userId).get().then((doc) => {
                     if (doc.exists) {
                         const data = doc.data();
-                        cactcoins = data.cactcoins;
+                        telecoins = data.telecoins;
                         clickValue = data.clickValue;
                         autoClickValue = data.autoClickValue;
                         upgradeLevels = data.upgradeLevels;
                         upgradeCosts = data.upgradeCosts;
                         items = data.items || {};
                         updateDisplay();
-                        updateCactusAppearance();
                     }
                 });
             }
         }
 
         function updateRanking() {
-            db.collection('users').orderBy('cactcoins', 'desc').limit(10).get().then((querySnapshot) => {
-                const rankingList = document.getElementById('rankingList');
+            db.collection('users').orderBy('telecoins', 'desc').limit(10).get().then((querySnapshot) => {
+                const rankingList = document.getElementById('ranking-list');
                 rankingList.innerHTML = '';
                 querySnapshot.forEach((doc) => {
                     const li = document.createElement('li');
-                    li.textContent = `${doc.id}: ${doc.data().cactcoins} CactCoins`;
+                    li.textContent = `Player ${doc.id}: ${doc.data().telecoins} TC`;
                     rankingList.appendChild(li);
                 });
             });
         }
 
-        function showTab(tabName) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('tab-active'));
-            document.getElementById(tabName).classList.add('tab-active');
+        function openTab(tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            document.getElementById(tabName).classList.add('active');
         }
 
+        document.getElementById('clicker').addEventListener('click', clickTelegram);
+
         setInterval(() => {
-            cactcoins += autoClickValue;
+            telecoins += autoClickValue;
             updateDisplay();
             saveProgress();
         }, 1000);
 
         setInterval(updateRanking, 60000); // Update ranking every minute
 
-        document.getElementById('cactus').addEventListener('click', clickCactus);
-
-                document.addEventListener("DOMContentLoaded", function() {
-            // Verificar se está sendo executado no Telegram Web App
-            if (window.Telegram && window.Telegram.WebApp) {
-                const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                if (tgUser) {
-                    userId = tgUser.id.toString();
-                    document.getElementById('intro').style.display = 'none';
-                    document.getElementById('game').style.display = 'flex';
-                    loadProgress();
-                    updateRanking();
-                } else {
-                    document.getElementById('intro').style.display = 'block';
-                }
-            } else {
-                document.getElementById('intro').style.display = 'block';
+        // Telegram Web App integration
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+            if (tgUser) {
+                userId = tgUser.id.toString();
+                document.getElementById('intro').style.display = 'none';
+                document.getElementById('game').style.display = 'block';
+                loadProgress();
+                updateRanking();
             }
-        });
+        } else {
+            // Web browser login
+            document.getElementById('login-btn').addEventListener('click', () => {
+                // Simulating login for demonstration purposes
+                userId = 'web_user_' + Math.random().toString(36).substr(2, 9);
+                document.getElementById('intro').style.display = 'none';
+                document.getElementById('game').style.display = 'block';
+                loadProgress();
+                updateRanking();
+            });
+        }
 
         updateDisplay();
     </script>
 </body>
-</html>
+                </html>
